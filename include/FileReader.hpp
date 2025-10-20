@@ -3,6 +3,7 @@
 
 # include <vector>
 # include <iostream>
+# include "GLShader.hpp"
 
 extern int g_sVecCopyCount;
 extern int g_sVecMoveCount;
@@ -12,17 +13,6 @@ void addToMove();
 
 int getCopyCount();
 int getMoveCount();
-
-struct s_vec3
-{
-    float x, y, z;
-    s_vec3(): x(0), y(0), z(0) {};
-    s_vec3(const s_vec3& other);
-    s_vec3(s_vec3&& other);
-
-    s_vec3& operator=(const s_vec3& other);
-    s_vec3& operator=(s_vec3&& other);
-};
 
 struct  s_InputFileLines
 {

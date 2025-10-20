@@ -32,7 +32,7 @@ m_title(title)
     }
     
     makeWindowCurrent();
-    swapIntervals(true);
+    swapIntervals(0);
     
     GLFWmonitor* primary = glfwGetPrimaryMonitor();
     if (!primary)
@@ -88,7 +88,7 @@ m_title(title)
     }
 
     makeWindowCurrent();
-    swapIntervals(true);
+    swapIntervals(0);
     setWindowPointer(this);
     getFrameBuffer(&m_fbWidth, &m_fbHeight);
 }
@@ -239,6 +239,28 @@ void GLWindow::clear(bool color, bool depth) const
         glClear(GL_COLOR_BUFFER_BIT);
     else if (depth)
         glClear(GL_DEPTH_BUFFER_BIT);
+}
+
+/**
+ * @param lequel flag to enable GL_LEQUAL
+ * @param depth flag to enable GL_DEPTH_TEST
+ * @brief enables by default GL_CULL_FACE and set glFrontFace to GL_CCW, and based on the flags lequal and depth will also be turned on
+ */
+void GLWindow::enable(bool lequal, bool depth)
+{
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    //glDisable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+    if (lequal && depth)
+    {
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+    }
+    else if (depth)
+        glEnable(GL_DEPTH_TEST);
+    else if (lequal)
+        glDepthFunc(GL_LEQUAL);
 }
 
 /**

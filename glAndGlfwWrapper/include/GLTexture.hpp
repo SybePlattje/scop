@@ -3,6 +3,8 @@
 
 #include <string>
 #include <glad/glad.h>
+#include <vector>
+#include "GLShader.hpp"
 
 class GLTexture
 {
@@ -16,7 +18,8 @@ class GLTexture
         bool loadFromFile(const std::string& path);
         void bind(unsigned int slot = 0) const;
         void unbind() const;
-        GLuint getTextureId();
+		bool generateTexCoord(const std::vector<s_vec3> &vertices, const std::vector<unsigned int> &indices, bool perFaceMapping, std::vector<s_vec2> &out);
+		GLuint getTextureId();
     private:
         GLuint m_textureId;
         int m_width;
