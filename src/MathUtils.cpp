@@ -5,7 +5,7 @@
 s_vec3 MathUtils::sVec3Normalize(const s_vec3& v)
 {
     float len = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-    if (len < 1e-8f)
+    if (len < 1e-6f)
         return {0.f, 0.f, 0.f};
     return { v.x / len, v.y / len, v.z / len};
 }
@@ -212,9 +212,9 @@ s_mat4 MathUtils::sMat4LookAt(const s_vec3& eye, const s_vec3& center, const s_v
     result.m[2][1] = -forward.y;
     result.m[2][2] = -forward.z;
 
-    result.m[3][0] = -sVec3Dot(side, eye);
-    result.m[3][1] = -sVec3Dot(camUp, eye);
-    result.m[3][2] = -sVec3Dot(forward, eye);
+    result.m[0][3] = -sVec3Dot(side, eye);
+    result.m[1][3] = -sVec3Dot(camUp, eye);
+    result.m[2][3] = sVec3Dot(forward, eye);
 
     return result;
 }

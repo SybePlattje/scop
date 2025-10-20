@@ -248,10 +248,6 @@ void GLWindow::clear(bool color, bool depth) const
  */
 void GLWindow::enable(bool lequal, bool depth)
 {
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    //glDisable(GL_CULL_FACE);
-    glFrontFace(GL_CCW);
     if (lequal && depth)
     {
         glEnable(GL_DEPTH_TEST);
@@ -261,6 +257,14 @@ void GLWindow::enable(bool lequal, bool depth)
         glEnable(GL_DEPTH_TEST);
     else if (lequal)
         glDepthFunc(GL_LEQUAL);
+    
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    // glDisable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+    glDepthFunc(GL_LESS);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 /**

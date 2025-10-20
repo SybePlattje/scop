@@ -10,7 +10,7 @@ out vec4 FragColor;
 
 void main()
 {
-    vec4 colorVal = vec4(vec3(lightIntensity), 1.0);
+    vec4 colorVal = vec4(vec3(abs(lightIntensity)), 1.0);
 
     vec4 texVal = texture(uTexture, texCoord);
 

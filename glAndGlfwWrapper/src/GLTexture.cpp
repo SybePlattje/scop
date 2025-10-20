@@ -230,6 +230,19 @@ bool GLTexture::generateTexCoord(
         1.f / (size.z > 1e-6f ? size.z : 1.f)
     };
 
+    auto project = [&](const s_vec3& v, int majorAxis) -> s_vec2
+        {
+            switch (majorAxis)
+            {
+                case 0:
+                    return {v.z, v.y};
+                case 1:
+                    return {v.x, v.z};
+                default:
+                    return {v.x, v.y};
+            }
+        };
+
     for (std::size_t i = 0; i < indices.size(); i += 3)
     {
         unsigned int i0 = indices[i];
@@ -259,27 +272,14 @@ bool GLTexture::generateTexCoord(
         int majorAxis = 0;
         if (absN.y > absN.x && absN.y > absN.z)
             majorAxis = 1;
-        else if (absN.x > absN.x && absN.z > absN.y)
+        else if (absN.z > absN.x && absN.z > absN.y)
             majorAxis = 2;
-
-        auto project = [&](const s_vec3& v) -> s_vec2
-        {
-            switch (majorAxis)
-            {
-                case 0:
-                    return {v.z, v.y};
-                case 1:
-                    return {v.x, v.z};
-                default:
-                    return {v.x, v.y};
-            }
-        };
 
         if (perFaceMapping == true)
         {
-            s_vec2 uv0 = project(v0);
-            s_vec2 uv1 = project(v1);
-            s_vec2 uv2 = project(v2);
+            s_vec2 uv0 = project(v0, majorAxis);
+            s_vec2 uv1 = project(v1, majorAxis);
+            s_vec2 uv2 = project(v2, majorAxis);
 
             s_vec2 minUV = sMinVec2(uv0, sMinVec2(uv1, uv2));
             s_vec2 maxUV = sMaxVec2(uv0, sMaxVec2(uv1, uv2));
@@ -287,13 +287,13 @@ bool GLTexture::generateTexCoord(
 
             out[i0] = { (uv0.x - minUV.x) / range.x, (uv0.y - minUV.y) / range.y };
             out[i1] = { (uv1.x - minUV.x) / range.x, (uv1.y - minUV.y) / range.y };
-            out[i2] = { (uv1.x - minUV.x) / range.x, (uv1.y - minUV.y) / range.y };
+            out[i2] = { (uv2.x - minUV.x) / range.x, (uv2.y - minUV.y) / range.y };
         }
         else
         {
-            out[i0] = sClamp({ (project(v0).x - minBound.x) * invSize.x, (project(v0).y - minBound.y) * invSize.y });
-            out[i1] = sClamp({ (project(v1).x - minBound.x) * invSize.x, (project(v1).y - minBound.y) * invSize.y });
-            out[i2] = sClamp({ (project(v2).x - minBound.x) * invSize.x, (project(v2).y - minBound.y) * invSize.y });
+            out[i0] = sClamp({ (project(v0, majorAxis).x - minBound.x) * invSize.x, (project(v0, majorAxis).y - minBound.y) * invSize.y });
+            out[i1] = sClamp({ (project(v1, majorAxis).x - minBound.x) * invSize.x, (project(v1, majorAxis).y - minBound.y) * invSize.y });
+            out[i2] = sClamp({ (project(v2, majorAxis).x - minBound.x) * invSize.x, (project(v2, majorAxis).y - minBound.y) * invSize.y });
         }
     }
     return true;

@@ -45,19 +45,19 @@ void smKeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action, in
             dInfo->transform.orientation = MathUtils::sQuatMultiply(dInfo->transform.orientation, q);
             break;
         case GLFW_KEY_D: // right
-            q = MathUtils::sQuatFromAxisAngle(axisY, -angleStep);
-            dInfo->transform.orientation = MathUtils::sQuatMultiply(dInfo->transform.orientation, q);
-            break;
-        case GLFW_KEY_A: // left
             q = MathUtils::sQuatFromAxisAngle(axisY, angleStep);
             dInfo->transform.orientation = MathUtils::sQuatMultiply(dInfo->transform.orientation, q);
             break;
+        case GLFW_KEY_A: // left
+            q = MathUtils::sQuatFromAxisAngle(axisY, -angleStep);
+            dInfo->transform.orientation = MathUtils::sQuatMultiply(dInfo->transform.orientation, q);
+            break;
         case GLFW_KEY_Q: // rotate left
-            q = MathUtils::sQuatFromAxisAngle(axisZ, angleStep);
+            q = MathUtils::sQuatFromAxisAngle(axisZ, -angleStep);
             dInfo->transform.orientation = MathUtils::sQuatMultiply(dInfo->transform.orientation, q);
             break;
         case GLFW_KEY_E: //rotate right
-            q = MathUtils::sQuatFromAxisAngle(axisZ, -angleStep);
+            q = MathUtils::sQuatFromAxisAngle(axisZ, angleStep);
             dInfo->transform.orientation = MathUtils::sQuatMultiply(dInfo->transform.orientation, q);
             break;
         case GLFW_KEY_R: // reset
@@ -93,8 +93,8 @@ s_mat4 setupModelViewProjection(float fovRadian, float near, float far, float di
         height = 1;
     float aspect = static_cast<float>(width) / static_cast<float>(height);
 
-    s_vec3 eye = {bbox.center.x, bbox.center.y, bbox.center.z - (distance * 5.f * dInfo.transform.zoomFactor)};
-    std::cout << "eye.z = " << (bbox.center.z - (distance * 5.f * dInfo.transform.zoomFactor)) << std::endl;
+    s_vec3 eye = {bbox.center.x, bbox.center.y, bbox.center.z - (distance * dInfo.transform.zoomFactor)};
+    std::cout << "eye.z = " << bbox.center.z - (distance * dInfo.transform.zoomFactor) << std::endl;
     std::cout << "eye.z = " << eye.z
           << "  distance = " << distance
           << "  zoom = " << dInfo.transform.zoomFactor << std::endl;
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
         }
 
         GLShader shader(reinterpret_cast<char*>(vertexSource.data()), reinterpret_cast<char*>(fragmentSource.data()));
-        GLTexture tex("textures/unicorns.bmp\0");
+        GLTexture tex("textures/nyan.bmp");
 
         std::vector<s_vec2> textureCoords;
         if (!tex.generateTexCoord(info.vertices, info.faces, false, textureCoords))
@@ -256,6 +256,7 @@ int main(int argc, char* argv[])
             timer.update();
             GLContext::sPollEvents();
             window.clear();
+            window.enable(false, true);
             shader.bind();
 
             displayInfo.transform.mvp = setupModelViewProjection(fovRadians, near, far, distance, up, window, bbox, displayInfo);
