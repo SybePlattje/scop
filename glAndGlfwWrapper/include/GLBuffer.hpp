@@ -26,7 +26,13 @@ class GLBuffer
 
         void bind() const;
         void unbind() const;
-        
+
+        /**
+         * @param data a vector with the data for the buffer
+         * @param usage a GLenum on how the data is usage by gl
+         * @brief sets the data to the buffer
+         * @return true when the data is setup to the buffer, false if data is empty
+         */
         template<typename T>
         bool setData(const std::vector<T>&data, GLenum usage = GL_STATIC_DRAW)
         {

@@ -257,14 +257,8 @@ void GLWindow::enable(bool lequal, bool depth)
         glEnable(GL_DEPTH_TEST);
     else if (lequal)
         glDepthFunc(GL_LEQUAL);
-    
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
-    glEnable(GL_DEPTH_TEST);
-    // glDisable(GL_CULL_FACE);
-    glFrontFace(GL_CCW);
-    glDepthFunc(GL_LESS);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    glFrontFace(GL_CCW);;
 }
 
 /**

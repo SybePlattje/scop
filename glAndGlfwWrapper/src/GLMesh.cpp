@@ -2,6 +2,10 @@
 #include <iostream>
 #include <stdexcept>
 
+/**
+ * @brief creates a mesh object with default values
+ * @exception runtime error if the creation of the vertex array fails
+ */
 GLMesh::GLMesh():
 m_vertexArrayObject(0),
 m_vertexCount(0),
@@ -12,6 +16,10 @@ m_indexCount(0)
         throw std::runtime_error("failed to create vertex array object");
 }
 
+/**
+ * @param other the object of which the data to move and take ownership of
+ * @brief the move constructor moves the data to itself and sets the other values to 0
+ */
 GLMesh::GLMesh(GLMesh&& other):
 m_vertexArrayObject(other.m_vertexArrayObject),
 m_vertexCount(other.m_vertexCount),
@@ -22,11 +30,18 @@ m_indexCount(other.m_indexCount)
     other.m_indexCount = 0;
 }
 
+/**
+ * @brief cleans up the vertex array object at the end of the scope;
+ */
 GLMesh::~GLMesh()
 {
     cleanup();
 }
 
+/**
+ * @param other the object to move its data and take ownership of
+ * @brief takes over the the data from other and sets the variables of other to 0
+ */
 GLMesh& GLMesh::operator=(GLMesh&& other)
 {
     if (this != &other)
@@ -46,8 +61,11 @@ GLMesh& GLMesh::operator=(GLMesh&& other)
 }
 
 /**
+ * @param buffer the vertex buffer object
+ * @param attributes the attribute data that buffer needs, like vertices, faces, texture coords
+ * @brief sets the attributes of the given vertex buffer
+ * @returns true when the attributes are attached, false on error with error message
  * @attention attributes.offset and attributes.stride are assumed to hold there byte value
- * 
  */
 bool GLMesh::attachVertexBuffer(const GLBuffer& buffer, std::vector<s_VertexAttribute>& attributes)
 {
@@ -101,6 +119,11 @@ bool GLMesh::attachVertexBuffer(const GLBuffer& buffer, std::vector<s_VertexAttr
     return true;
 }
 
+/**
+ * @param buffer the element buffer object
+ * @brief attaches the attributes to the element buffer object
+ * @return true if the attributes are attached, false on error with message printed to console error output
+ */
 bool GLMesh::attachElementBuffer(const GLBuffer& buffer)
 {
     if (buffer.getType() != GLBuffer::e_Type::Element)
@@ -116,16 +139,28 @@ bool GLMesh::attachElementBuffer(const GLBuffer& buffer)
     return true;
 }
 
+/**
+ * @brief binds the vertex array object for OpenGL as the vao in use
+ */
 void GLMesh::bind() const
 {
     glBindVertexArray(m_vertexArrayObject);
 }
 
+/**
+ * @brief unbinds to vertex array object and sets the in use vertex array object to 0
+ */
 void GLMesh::unbind() const
 {
     glBindVertexArray(0);
 }
 
+/**
+ * @param mode
+ * @param count
+ * @param indexType
+ * @brief
+ */
 void GLMesh::draw(GLenum mode, GLsizei count, GLenum indexType) const
 {
     bind();
@@ -144,11 +179,18 @@ void GLMesh::draw(GLenum mode, GLsizei count, GLenum indexType) const
     unbind();
 }
 
+/**
+ * @brief gets the vertex array object
+ * @return the GLuint vertex array object
+ */
 GLuint GLMesh::getVertextArrayObject() const
 {
     return m_vertexArrayObject;
 }
 
+/**
+ * @brief cleans the vertex array object up
+ */
 void GLMesh::cleanup()
 {
     if (m_vertexArrayObject)
@@ -158,6 +200,11 @@ void GLMesh::cleanup()
     }
 }
 
+/**
+ * @param type a GLenum of the type
+ * @brief get the size of the type
+ * @return the size of the type
+ */
 std::size_t GLMesh::getTypeSize(GLenum type)
 {
     switch (type)

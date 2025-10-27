@@ -13,12 +13,6 @@
 #include <iostream>
 #include <algorithm>
 
-std::ostream& operator<<(std::ostream& out, const s_quat& q)
-{
-    out << "w = " << q.w << " x = " << q.x << " y = " << q.y << " z = " << q.z;
-    return out;
-}
-
 void smKeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/)
 {
     if (action != GLFW_PRESS && action != GLFW_REPEAT)
@@ -33,7 +27,6 @@ void smKeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action, in
 
     const float angleStep = 0.01f;
     s_quat q = {};
-    std::cout << "orientation before [" << dInfo->transform.orientation << "]" << std::endl;
     switch (key)
     {
         case GLFW_KEY_W: // up
@@ -80,7 +73,6 @@ void smKeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action, in
             break;
     }
     dInfo->transform.orientation = MathUtils::sQuatNormalize(dInfo->transform.orientation);
-    std::cout << "orientation after [" << dInfo->transform.orientation << "]" << std::endl;
 }
 
 s_mat4 setupModelViewProjection(float fovRadian, float near, float far, float distance, const s_vec3& up, GLWindow& window, const s_BoundingBox& bbox, s_DisplayInfo& dInfo)
@@ -94,10 +86,6 @@ s_mat4 setupModelViewProjection(float fovRadian, float near, float far, float di
     float aspect = static_cast<float>(width) / static_cast<float>(height);
 
     s_vec3 eye = {bbox.center.x, bbox.center.y, bbox.center.z - (distance * dInfo.transform.zoomFactor)};
-    std::cout << "eye.z = " << bbox.center.z - (distance * dInfo.transform.zoomFactor) << std::endl;
-    std::cout << "eye.z = " << eye.z
-          << "  distance = " << distance
-          << "  zoom = " << dInfo.transform.zoomFactor << std::endl;
 
     s_mat4 view = MathUtils::sMat4LookAt(eye, bbox.center, up);
     s_mat4 proj = MathUtils::sMat4Perspective(fovRadian, aspect, near, far);
@@ -210,7 +198,7 @@ int main(int argc, char* argv[])
         for (std::size_t i = 0; i < info.vertices.size(); ++i)
         {
             verticesInterLeavedFace.emplace_back(
-                info.vertices[i],
+                info.verticesPerFace[i],
                 textCoordFace[i],
                 normals[i]
             );
@@ -225,7 +213,7 @@ int main(int argc, char* argv[])
             return 1;
         
         GLBuffer eboFace(GLBuffer::e_Type::Element);
-        if (!eboFace.setData(info.faces, GL_STATIC_DRAW))
+        if (!eboFace.setData(info.facesPerFace, GL_STATIC_DRAW))
             return 1;
         meshFace.bind();
         if (!meshFace.attachElementBuffer(eboFace))
@@ -260,11 +248,6 @@ int main(int argc, char* argv[])
             shader.bind();
 
             displayInfo.transform.mvp = setupModelViewProjection(fovRadians, near, far, distance, up, window, bbox, displayInfo);
-
-            // float mvpArray[16];
-            // float modelArray[16];
-            // MathUtils::sMat4ToArray(displayInfo.transform.mvp, mvpArray);
-            // MathUtils::sMat4ToArray(displayInfo.transform.model, modelArray);
 
             if (displayInfo.render.useTexture)
                 displayInfo.render.blendValue += 1.f * timer.getDeltaTime();

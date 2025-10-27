@@ -27,7 +27,9 @@ s_InputFileLines FileReader::sParseInput(const char* path)
 
     std::string line;
     result.faces.reserve(3000);
+    result.facesPerFace.reserve(3000);
     result.vertices.reserve(3000);
+    result.verticesPerFace.reserve(3000);
     while (std::getline(fstream, line))
     {
         if (0 == line.rfind("v ", 0))
@@ -38,13 +40,34 @@ s_InputFileLines FileReader::sParseInput(const char* path)
         }
         else if (0 == line.rfind("f ", 0))
         {
-            unsigned int a, b, c;
-            if (std::sscanf(line.c_str(), "f %u %u %u", &a, &b, &c) == 3)
+            std::vector<unsigned int> faceIndices;
+            faceIndices.reserve(3000);
+            unsigned int id;
+            std::stringstream ss(line);
+            std::string token;
+            ss >> token;
+            while (ss >> id)
+                faceIndices.emplace_back(id - 1);
+
+            for (std::size_t i = 1; i < faceIndices.size() - 1; ++i)
             {
-                result.faces.emplace_back(a - 1);
-                result.faces.emplace_back(b - 1);
-                result.faces.emplace_back(c - 1);
+                result.faces.emplace_back(faceIndices[0]);
+                result.faces.emplace_back(faceIndices[i]);
+                result.faces.emplace_back(faceIndices[i + 1]);
             }
+        }
+    }
+
+    for (std::size_t i = 0; i < result.faces.size(); i += 3)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            unsigned int vertexIndex = result.faces[i + j];
+            s_vec3 vertex = result.vertices[vertexIndex];
+
+            result.verticesPerFace.emplace_back(vertex);
+
+            result.facesPerFace.emplace_back(static_cast<unsigned int>(result.facesPerFace.size()));
         }
     }
 
