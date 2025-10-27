@@ -235,7 +235,7 @@ bool GLTexture::generateTexCoord(
             switch (majorAxis)
             {
                 case 0:
-                    return {v.z, v.y};
+                    return {v.y, v.z};
                 case 1:
                     return {v.x, v.z};
                 default:
@@ -272,15 +272,15 @@ bool GLTexture::generateTexCoord(
         int majorAxis = 0;
         if (absN.y > absN.x && absN.y > absN.z)
             majorAxis = 1;
-        else if (absN.z > absN.x && absN.z > absN.y)
+        if (absN.z > absN.x && absN.z > absN.y)
             majorAxis = 2;
+
+        s_vec2 uv0 = project(v0, majorAxis);
+        s_vec2 uv1 = project(v1, majorAxis);
+        s_vec2 uv2 = project(v2, majorAxis);
 
         if (perFaceMapping == true)
         {
-            s_vec2 uv0 = project(v0, majorAxis);
-            s_vec2 uv1 = project(v1, majorAxis);
-            s_vec2 uv2 = project(v2, majorAxis);
-
             s_vec2 minUV = sMinVec2(uv0, sMinVec2(uv1, uv2));
             s_vec2 maxUV = sMaxVec2(uv0, sMaxVec2(uv1, uv2));
             s_vec2 range { std::max(maxUV.x - minUV.x, 1e-6f), std::max(maxUV.y - minUV.y, 1e-6f) };
@@ -291,9 +291,9 @@ bool GLTexture::generateTexCoord(
         }
         else
         {
-            out[i0] = sClamp({ (project(v0, majorAxis).x - minBound.x) * invSize.x, (project(v0, majorAxis).y - minBound.y) * invSize.y });
-            out[i1] = sClamp({ (project(v1, majorAxis).x - minBound.x) * invSize.x, (project(v1, majorAxis).y - minBound.y) * invSize.y });
-            out[i2] = sClamp({ (project(v2, majorAxis).x - minBound.x) * invSize.x, (project(v2, majorAxis).y - minBound.y) * invSize.y });
+            out[i0] = sClamp({ (uv0.x - minBound.x) * invSize.x, (uv0.y - minBound.y) * invSize.y });
+            out[i1] = sClamp({ (uv1.x - minBound.x) * invSize.x, (uv1.y - minBound.y) * invSize.y });
+            out[i2] = sClamp({ (uv2.x - minBound.x) * invSize.x, (uv2.y - minBound.y) * invSize.y });
         }
     }
     return true;

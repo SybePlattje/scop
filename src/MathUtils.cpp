@@ -155,12 +155,12 @@ void MathUtils::sMat4ToArray(const s_mat4& mat, float* out)
 
 float MathUtils::sDistance(float boundingRadius, float fovRadius)
 {
-    return boundingRadius / std::tan(fovRadius / 2.f);
+    return boundingRadius / std::tan(fovRadius / 3.f);
 }
 
 float MathUtils::sRadiance()
 {
-    return M_PI / 5.f;
+    return M_PI / 6.f;
 }
 
 s_mat4 MathUtils::sMat4Multiply(const s_mat4& a, const s_mat4& b)
