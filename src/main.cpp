@@ -184,23 +184,23 @@ int main(int argc, char* argv[])
         if (!ebo.setData(info.faces, GL_STATIC_DRAW))
             return 1;
 
-        mesh.bind();
         if (!mesh.attachElementBuffer(ebo))
             return 1;
-        mesh.unbind();
 
         std::vector<s_vec2> textCoordFace;
-        if (!tex.generateTexCoord(info.vertices, info.faces, true, textCoordFace))
+        if (!tex.generateTexCoord(info.verticesPerFace, info.facesPerFace, true, textCoordFace))
             return 1;
 
+        std::vector<s_vec3> normalsFace = MathUtils::sComputeVertexNormals(info.verticesPerFace, info.facesPerFace);
+
         std::vector<s_Vertex> verticesInterLeavedFace;
-        verticesInterLeavedFace.reserve(info.vertices.size());
-        for (std::size_t i = 0; i < info.vertices.size(); ++i)
+        verticesInterLeavedFace.reserve(info.verticesPerFace.size());
+        for (std::size_t i = 0; i < info.verticesPerFace.size(); ++i)
         {
             verticesInterLeavedFace.emplace_back(
                 info.verticesPerFace[i],
                 textCoordFace[i],
-                normals[i]
+                normalsFace[i]
             );
         }
 
@@ -215,10 +215,8 @@ int main(int argc, char* argv[])
         GLBuffer eboFace(GLBuffer::e_Type::Element);
         if (!eboFace.setData(info.facesPerFace, GL_STATIC_DRAW))
             return 1;
-        meshFace.bind();
         if (!meshFace.attachElementBuffer(eboFace))
             return 1;
-        meshFace.unbind();
 
         s_Transform transform;
         transform.orientation = MathUtils::sQuatIdentify();
@@ -263,17 +261,9 @@ int main(int argc, char* argv[])
             shader.setUniform("uBlend", displayInfo.render.blendValue);
 
             if (displayInfo.render.perFace)
-            {
-                meshFace.bind();
-                meshFace.draw(GL_TRIANGLES, info.faces.size(), GL_UNSIGNED_INT);
-                meshFace.unbind();
-            }
+                meshFace.draw(GL_TRIANGLES, info.facesPerFace.size(), GL_UNSIGNED_INT);
             else
-            {
-                mesh.bind();
                 mesh.draw(GL_TRIANGLES, info.faces.size(), GL_UNSIGNED_INT);
-                mesh.unbind();
-            }
 
             GLenum err = GL_NO_ERROR;
             while ((err = glGetError()) != GL_NO_ERROR)
