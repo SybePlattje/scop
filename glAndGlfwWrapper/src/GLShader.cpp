@@ -1,19 +1,34 @@
 #include "GLShader.hpp"
 #include <iostream>
 #include <stdexcept>
+#include "GLUtils.hpp"
 
 /**
- * @param vertexSource the source data from the vertex shader
- * @param fragmentSource the source dat from the fragment shader
+ * @param vertexFilePath the file path to the vertex shader
+ * @param fragmentFilePath the file path to the fragment shader
  * @brief compiles the vertex and fragment shader to be used later
- * @exception runtime error if the comiling of the shaders or the linking between shader and shaderprogram fails
+ * @exception runtime error if reading of shader files fails
+ * @exception runtime error if the compiling of the shaders fails
+ * @exception runtime error if the linking between shader and shaderprogram fails
  */
-GLShader::GLShader(const std::string& vertexSource, const std::string& fragmentSource)
+GLShader::GLShader(const std::string& vertexFilePath, const std::string& fragmentFilePath)
 {
+    std::vector<unsigned char> fileSource;
+
+    if (!GLUtils::sReadShaderFile(vertexFilePath.c_str(), fileSource))
+        throw std::runtime_error("Failed to read vertex shader file");
+
+    std::string vertexSource = reinterpret_cast<char*>(fileSource.data());
     GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
     if (vertexShader == 0)
         throw std::runtime_error("Failed to compile vertexShader");
     
+    fileSource.clear();
+
+    if (!GLUtils::sReadShaderFile(fragmentFilePath.c_str(), fileSource))
+        throw std::runtime_error("Failed to read fragment shader file");
+
+    std::string fragmentSource = reinterpret_cast<char*>(fileSource.data());
     GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
     if (fragmentShader == 0)
     {

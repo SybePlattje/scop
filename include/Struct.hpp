@@ -2,6 +2,8 @@
 # define STRUCT_HPP
 
 # include "GLShader.hpp"
+# include "GLBuffer.hpp"
+# include "GLMesh.hpp"
 
 struct s_Transform
 {
@@ -44,5 +46,25 @@ struct s_Vertex
 	s_vec3 normal;
 };
 
+struct  s_InputFileLines
+{
+    std::vector<s_vec3> vertices;
+    std::vector<s_vec3> verticesPerFace;
+    std::vector<unsigned int> faces;
+    std::vector<unsigned int> facesPerFace;
+};
+
+struct s_Buffers
+{
+	GLMesh vao;
+	GLMesh vaoFace;
+	GLBuffer vbo;
+	GLBuffer vboFace;
+	GLBuffer ebo;
+	GLBuffer eboFace;
+
+	s_Buffers(): vao(), vaoFace(), vbo(GLBuffer::e_Type::Array), vboFace(GLBuffer::e_Type::Array), ebo(GLBuffer::e_Type::Element), eboFace(GLBuffer::e_Type::Element) {}
+	~s_Buffers() = default;
+};
 
 #endif

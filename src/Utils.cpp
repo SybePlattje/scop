@@ -1,8 +1,13 @@
-#include "MathUtils.hpp"
+#include "Utils.hpp"
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
+#include <filesystem>
+#include <fstream>
+#include <string>
+#include <sstream>
 
-s_vec3 MathUtils::sVec3Normalize(const s_vec3& v)
+s_vec3 Utils::sVec3Normalize(const s_vec3& v)
 {
     float len = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
     if (len < 1e-6f)
@@ -10,7 +15,7 @@ s_vec3 MathUtils::sVec3Normalize(const s_vec3& v)
     return { v.x / len, v.y / len, v.z / len};
 }
 
-std::vector<s_vec3> MathUtils::sComputeVertexNormals
+std::vector<s_vec3> Utils::sComputeVertexNormals
 (
     const std::vector<s_vec3>& vertices,
     const std::vector<unsigned int>& indices
@@ -59,7 +64,7 @@ std::vector<s_vec3> MathUtils::sComputeVertexNormals
     return normal;
 }
 
-s_quat MathUtils::sQuatIdentify()
+s_quat Utils::sQuatIdentify()
 {
     s_quat q = {};
     q.w = 1.f;
@@ -69,7 +74,7 @@ s_quat MathUtils::sQuatIdentify()
     return q;
 }
 
-s_quat MathUtils::sQuatNormalize(const s_quat& q)
+s_quat Utils::sQuatNormalize(const s_quat& q)
 {
     float len = std::sqrt(q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z);
     s_quat result = q;
@@ -83,7 +88,7 @@ s_quat MathUtils::sQuatNormalize(const s_quat& q)
     return result;
 }
 
-s_BoundingBox MathUtils::sComputeBoundingBoxAndScale(const std::vector<s_vec3>& vertices)
+s_BoundingBox Utils::sComputeBoundingBoxAndScale(const std::vector<s_vec3>& vertices)
 {
     s_vec3 min = vertices[0];
     s_vec3 max = vertices[0];
@@ -114,7 +119,7 @@ s_BoundingBox MathUtils::sComputeBoundingBoxAndScale(const std::vector<s_vec3>& 
     return { min, max, center, size, scale };
 }
 
-float MathUtils::sBoundingBoxRadius(const s_BoundingBox& bbox)
+float Utils::sBoundingBoxRadius(const s_BoundingBox& bbox)
 {
     return 0.5f * bbox.scale * 
         std::sqrt(bbox.size.x * bbox.size.x +
@@ -122,7 +127,7 @@ float MathUtils::sBoundingBoxRadius(const s_BoundingBox& bbox)
             bbox.size.z * bbox.size.z);
 }
 
-s_quat MathUtils::sQuatMultiply(const s_quat& a, const s_quat& b)
+s_quat Utils::sQuatMultiply(const s_quat& a, const s_quat& b)
 {
     return {
         a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
@@ -132,7 +137,7 @@ s_quat MathUtils::sQuatMultiply(const s_quat& a, const s_quat& b)
     };
 }
 
-s_quat MathUtils::sQuatFromAxisAngle(const s_vec3& axis, float angleRad)
+s_quat Utils::sQuatFromAxisAngle(const s_vec3& axis, float angleRad)
 {
     float halfAngle = angleRad * 0.5f;
     float sinHalfAngle = std::sin(halfAngle);
@@ -144,7 +149,7 @@ s_quat MathUtils::sQuatFromAxisAngle(const s_vec3& axis, float angleRad)
     };
 }
 
-void MathUtils::sMat4ToArray(const s_mat4& mat, float* out)
+void Utils::sMat4ToArray(const s_mat4& mat, float* out)
 {
     for (int col = 0; col < 4; ++col)
     {
@@ -153,17 +158,17 @@ void MathUtils::sMat4ToArray(const s_mat4& mat, float* out)
     }
 }
 
-float MathUtils::sDistance(float boundingRadius, float fovRadius)
+float Utils::sDistance(float boundingRadius, float fovRadius)
 {
     return boundingRadius / std::tan(fovRadius / 3.f);
 }
 
-float MathUtils::sRadiance()
+float Utils::sRadiance()
 {
     return M_PI / 6.f;
 }
 
-s_mat4 MathUtils::sMat4Multiply(const s_mat4& a, const s_mat4& b)
+s_mat4 Utils::sMat4Multiply(const s_mat4& a, const s_mat4& b)
 {
     s_mat4 result = {};
 
@@ -179,7 +184,7 @@ s_mat4 MathUtils::sMat4Multiply(const s_mat4& a, const s_mat4& b)
     return result;
 }
 
-s_mat4 MathUtils::sMat4Perspective(float fovRadian, float aspact, float near, float far)
+s_mat4 Utils::sMat4Perspective(float fovRadian, float aspact, float near, float far)
 {
     s_mat4 result = {};
     float localLength = 1.f / std::tan(fovRadian / 2.f);
@@ -193,7 +198,7 @@ s_mat4 MathUtils::sMat4Perspective(float fovRadian, float aspact, float near, fl
     return result;
 }
 
-s_mat4 MathUtils::sMat4LookAt(const s_vec3& eye, const s_vec3& center, const s_vec3& worldUp)
+s_mat4 Utils::sMat4LookAt(const s_vec3& eye, const s_vec3& center, const s_vec3& worldUp)
 {
     s_vec3 forward = sVec3Normalize(sVec3Subtract(center, eye));
     s_vec3 side = sVec3Normalize(sVec3Cross(forward, worldUp));
@@ -219,7 +224,7 @@ s_mat4 MathUtils::sMat4LookAt(const s_vec3& eye, const s_vec3& center, const s_v
     return result;
 }
 
-s_mat4 MathUtils::sMat4Scale(float s)
+s_mat4 Utils::sMat4Scale(float s)
 {
     s_mat4 result = {};
 
@@ -231,7 +236,7 @@ s_mat4 MathUtils::sMat4Scale(float s)
     return result;
 }
 
-s_mat4 MathUtils::sMat4Translate(float tx, float ty, float tz)
+s_mat4 Utils::sMat4Translate(float tx, float ty, float tz)
 {
     s_mat4 mat = sMat4Identify();
 
@@ -242,7 +247,7 @@ s_mat4 MathUtils::sMat4Translate(float tx, float ty, float tz)
     return mat;
 }
 
-s_mat4 MathUtils::sQuatToMat4(const s_quat& q)
+s_mat4 Utils::sQuatToMat4(const s_quat& q)
 {
     s_mat4 mat = sMat4Identify();
 
@@ -269,7 +274,7 @@ s_mat4 MathUtils::sQuatToMat4(const s_quat& q)
     return mat;
 }
 
-s_mat4 MathUtils::sMat4Identify()
+s_mat4 Utils::sMat4Identify()
 {
     s_mat4 result = {};
 
@@ -278,12 +283,12 @@ s_mat4 MathUtils::sMat4Identify()
     return result;
 }
 
-s_vec3 MathUtils::sVec3Subtract(const s_vec3& a, const s_vec3& b)
+s_vec3 Utils::sVec3Subtract(const s_vec3& a, const s_vec3& b)
 {
     return {a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
-s_vec3 MathUtils::sVec3Cross(const s_vec3& a, const s_vec3& b)
+s_vec3 Utils::sVec3Cross(const s_vec3& a, const s_vec3& b)
 {
     return {
         a.y * b.z - a.z * b.y,
@@ -292,7 +297,79 @@ s_vec3 MathUtils::sVec3Cross(const s_vec3& a, const s_vec3& b)
     };
 }
 
-float MathUtils::sVec3Dot(const s_vec3& a, const s_vec3& b)
+float Utils::sVec3Dot(const s_vec3& a, const s_vec3& b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+s_InputFileLines Utils::sParseInput(const char* path)
+{
+    if (!path)
+        throw std::runtime_error("path cannot be empty");
+
+    std::filesystem::path filePath = path;
+    if (".obj" != filePath.extension())
+        throw std::runtime_error("file needs to be a .obj");
+
+    std::ifstream fstream(path);
+    if (!fstream)
+    {
+        std::string fileString = "resources/" + static_cast<std::string>(path);
+        fstream.open(fileString);
+        if (!fstream)
+            throw std::runtime_error("File not found");
+    }
+
+    s_InputFileLines result;
+
+    std::string line;
+    result.faces.reserve(3000);
+    result.facesPerFace.reserve(3000);
+    result.vertices.reserve(3000);
+    result.verticesPerFace.reserve(3000);
+    while (std::getline(fstream, line))
+    {
+        if (0 == line.rfind("v ", 0))
+        {
+            float x, y, z;
+            std::sscanf(line.c_str(), "v %f %f %f", &x, &y, &z);
+            result.vertices.emplace_back(x, y, z);
+        }
+        else if (0 == line.rfind("f ", 0))
+        {
+            std::vector<unsigned int> faceIndices;
+            faceIndices.reserve(3000);
+            unsigned int id;
+            std::stringstream ss(line);
+            std::string token;
+            ss >> token;
+            while (ss >> id)
+                faceIndices.emplace_back(id - 1);
+
+            for (std::size_t i = 1; i < faceIndices.size() - 1; ++i)
+            {
+                result.faces.emplace_back(faceIndices[0]);
+                result.faces.emplace_back(faceIndices[i]);
+                result.faces.emplace_back(faceIndices[i + 1]);
+            }
+        }
+    }
+
+    for (std::size_t i = 0; i < result.faces.size(); i += 3)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            unsigned int vertexIndex = result.faces[i + j];
+            s_vec3 vertex = result.vertices[vertexIndex];
+
+            result.verticesPerFace.emplace_back(vertex);
+
+            result.facesPerFace.emplace_back(static_cast<unsigned int>(result.facesPerFace.size()));
+        }
+    }
+
+    if (0 == result.vertices.size() || 0 == result.faces.size())
+        throw std::runtime_error("no vertices or faces found in file");
+
+    return result;
 }

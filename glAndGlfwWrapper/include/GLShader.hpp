@@ -30,7 +30,7 @@ template<class> struct always_false : std::false_type {};
 class GLShader
 {
     public:
-        GLShader(const std::string& vertexSource, const std::string& fragmentSource);
+        GLShader(const std::string& vertexFilePath, const std::string& fragmentFilePath);
         ~GLShader();
 
         void bind() const;

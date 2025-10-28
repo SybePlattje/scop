@@ -1,11 +1,11 @@
-#ifndef MATHUTILS_HPP
-# define MATHUTILS_HPP
+#ifndef UTILS_HPP
+# define UTILS_HPP
 
 # include <vector>
 # include "GLShader.hpp"
 # include "Struct.hpp"
 
-class MathUtils
+class Utils
 {
 	public:
 		static std::vector<s_vec3> sComputeVertexNormals(const std::vector<s_vec3>& vertices, const std::vector<unsigned int>& indices);
@@ -29,6 +29,7 @@ class MathUtils
 		static s_mat4 sMat4Translate(float tx, float ty, float tz);
 		static s_mat4 sQuatToMat4(const s_quat& q);
 		static s_mat4 sMat4Identify();
+		static s_InputFileLines sParseInput(const char* path);
 };
 
 #endif
