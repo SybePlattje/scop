@@ -186,62 +186,43 @@ void GLTexture::unbind() const
 }
 
 /**
- * @param vertices the vector holding all vertices of the object
- * @param indices the vector holding all indices of the object
- * @param perFaceMappig flag if the texure coords are per face or over the entire object
- * @param out the texture coordinates in relation to the object
- * @return true if texture coordinations are generated, false if vertices or indices are empty
- * @brief generates the texture coordinates for the object, with a flag option for setting the texture per indice or over the entire object
+ * @brief frees the texture id data
  */
-bool GLTexture::generateTexCoord(
+void GLTexture::freeTexture()
+{
+    if (0 != m_textureId)
+    {
+        glDeleteTextures(1, &m_textureId);
+        m_textureId = 0;
+    }
+}
+
+/**
+ * @param vertices the vector holding all the verrtices of the object
+ * @param indices the vector holding all the faces of the object
+ * @param out the s_vec2 vector that will hold the texure coordinates
+ * @brief creates the texture coordinates so the texture is taking up 1 face
+ */
+void GLTexture::generateTexCoordPerFace(
     const std::vector<s_vec3>& vertices,
     const std::vector<unsigned int>& indices,
-    bool perFaceMapping,
     std::vector<s_vec2>& out)
 {
-    if (vertices.empty() || indices.empty())
-    {
-        std::cerr << "vertices or indices is empty" << std::endl;
-        return false;
-    }
-
     out.clear();
-    out.resize(vertices.size(), {0.f, 0.f});
-
-    s_vec3 minBound { std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
-    s_vec3 maxBound = { -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max() };
-
-    for (const s_vec3& value : vertices)
-    {
-        minBound.x = std::min(minBound.x, value.x);
-        minBound.y = std::min(minBound.y, value.y);
-        minBound.z = std::min(minBound.z, value.z);
-
-        maxBound.x = std::max(maxBound.x, value.x);
-        maxBound.y = std::max(maxBound.y, value.y);
-        maxBound.z = std::max(maxBound.z, value.z);
-    }
-
-    s_vec3 size {maxBound.x - minBound.x, maxBound.y - minBound.y, maxBound.z - minBound.z };
-    s_vec3 invSize
-    {
-        1.f / (size.x > 1e-6f ? size.x : 1.f),
-        1.f / (size.y > 1e-6f ? size.y : 1.f),
-        1.f / (size.z > 1e-6f ? size.z : 1.f)
-    };
+    out.reserve(vertices.size());
 
     auto project = [&](const s_vec3& v, int majorAxis) -> s_vec2
+    {
+        switch (majorAxis)
         {
-            switch (majorAxis)
-            {
-                case 0:
-                    return {v.y, v.z};
-                case 1:
-                    return {v.x, v.z};
-                default:
-                    return {v.x, v.y};
-            }
-        };
+            case 0:
+                return {v.y, v.z};
+            case 1:
+                return {v.x, v.z};
+            default:
+                return {v.x, v.y};
+        }
+    };
 
     for (std::size_t i = 0; i < indices.size(); i += 3)
     {
@@ -253,60 +234,140 @@ bool GLTexture::generateTexCoord(
         s_vec3 v1 = vertices[i1];
         s_vec3 v2 = vertices[i2];
 
-        s_vec3 e1 { v1.x - v0.x, v1.y - v0.y, v1.z - v0.z };
-        s_vec3 e2 { v2.x - v0.x, v2.y - v0.y, v2.z - v0.z };
-        s_vec3 faceNormal
-        {
-            e1.y * e2.z - e1.z * e2.y,
-            e1.z * e2.x - e1.x * e2.z,
-            e1.x * e2.y - e1.y * e2.x
+        s_vec3 edge1 = {v1.x - v0.x, v1.y - v0.y, v1.z - v0.z};
+        s_vec3 edge2 = {v2.x - v0.x, v2.y - v0.y, v2.z - v0.z};
+
+        s_vec3 faceNormal = {
+            edge1.y * edge2.z - edge1.z * edge2.y,
+            edge1.z * edge2.x - edge1.x * edge2.z,
+            edge1.x * edge2.y - edge1.y * edge2.x
         };
 
-        float len = std::max(1e-6f, std::sqrt(faceNormal.x * faceNormal.x + faceNormal.y * faceNormal.y + faceNormal.z * faceNormal.z));
+        float len = std::sqrt(faceNormal.x * faceNormal.x + faceNormal.y * faceNormal.y + faceNormal.z * faceNormal.z);
+        if (len < 1e-6f)
+            continue;
+
         faceNormal.x /= len;
         faceNormal.y /= len;
         faceNormal.z /= len;
 
-        s_vec3 absN {std::abs(faceNormal.x), std::abs(faceNormal.y), std::abs(faceNormal.z)};
+        s_vec3 absN{ std::abs(faceNormal.x), std::abs(faceNormal.y), std::abs(faceNormal.z)};
 
         int majorAxis = 0;
         if (absN.y > absN.x && absN.y > absN.z)
-            majorAxis = 1;
-        if (absN.z > absN.x && absN.z > absN.y)
             majorAxis = 2;
+        if (absN.z > absN.x && absN.z > absN.y)
+            majorAxis = 1;
 
         s_vec2 uv0 = project(v0, majorAxis);
         s_vec2 uv1 = project(v1, majorAxis);
         s_vec2 uv2 = project(v2, majorAxis);
 
-        if (perFaceMapping == true)
-        {
-            s_vec2 minUV = sMinVec2(uv0, sMinVec2(uv1, uv2));
-            s_vec2 maxUV = sMaxVec2(uv0, sMaxVec2(uv1, uv2));
-            s_vec2 range { std::max(maxUV.x - minUV.x, 1e-6f), std::max(maxUV.y - minUV.y, 1e-6f) };
+        s_vec2 minUV = sMinVec2(uv0, sMinVec2(uv1, uv2));
+        s_vec2 maxUV = sMaxVec2(uv0, sMaxVec2(uv1, uv2));
+        s_vec2 range{
+            std::max(maxUV.x - minUV.x, 1e-6f),
+            std::max(maxUV.y - minUV.y, 1e-6f)
+        };
 
-            out[i0] = { (uv0.x - minUV.x) / range.x, (uv0.y - minUV.y) / range.y };
-            out[i1] = { (uv1.x - minUV.x) / range.x, (uv1.y - minUV.y) / range.y };
-            out[i2] = { (uv2.x - minUV.x) / range.x, (uv2.y - minUV.y) / range.y };
-        }
-        else
-        {
-            out[i0] = sClamp({ (uv0.x - minBound.x) * invSize.x, (uv0.y - minBound.y) * invSize.y });
-            out[i1] = sClamp({ (uv1.x - minBound.x) * invSize.x, (uv1.y - minBound.y) * invSize.y });
-            out[i2] = sClamp({ (uv2.x - minBound.x) * invSize.x, (uv2.y - minBound.y) * invSize.y });
-        }
+        out[i0] = {(uv0.x - minUV.x) / range.x, (uv0.y - minUV.y) / range.y};
+        out[i1] = {(uv1.x - minUV.x) / range.x, (uv1.y - minUV.y) / range.y};
+        out[i2] = {(uv2.x - minUV.x) / range.x, (uv2.y - minUV.y) / range.y};
     }
-    return true;
 }
 
 /**
- * @brief frees the texture id data
+ * @param vertices the vector holding all vertices of the object
+ * @param indices the vector holding all faces of the object
+ * @param out the s_vec2 vector that will hold the coordinates of the texture
+ * @brief generate the texture coords to go over the hole object
  */
-void GLTexture::freeTexture()
+void GLTexture::generateTexCoordGlobal(
+    const std::vector<s_vec3>& vertices,
+    const std::vector<unsigned int>& indices,
+    std::vector<s_vec2>& out)
 {
-    if (0 != m_textureId)
+    out.clear();
+    out.reserve(vertices.size());
+
+    auto project = [&](const s_vec3& v, int majorAxis) -> s_vec2
     {
-        glDeleteTextures(1, &m_textureId);
-        m_textureId = 0;
+        switch (majorAxis)
+        {
+            case 0:
+                return {v.y, v.z};
+            case 1:
+                return {v.x, v.z};
+            default:
+                return {v.x, v.y};
+        }
+    };
+
+    s_vec3 totalNormal{};
+    for (std::size_t i = 0; i < indices.size(); i += 3)
+    {
+        const s_vec3& v0 = vertices[indices[i]];
+        const s_vec3& v1 = vertices[indices[i + 1]];
+        const s_vec3& v2 = vertices[indices[i + 2]];
+
+        const s_vec3 min1 = {v1.x - v0.x, v1.y - v0.y, v1.z - v0.z};
+        const s_vec3 min2 = {v2.x - v0.x, v2.y - v0.y, v2.z - v0.z};
+
+        const s_vec3 cross = {
+            min1.y * min2.z - min1.z * min2.y,
+            min1.z * min2.x - min1.x * min2.z,
+            min1.x * min2.y - min1.y * min2.x
+        };
+
+        totalNormal = {
+            totalNormal.x + cross.x,
+            totalNormal.y + cross.y,
+            totalNormal.z + cross.z
+        };
+    }
+
+    s_vec3 absN{std::abs(totalNormal.x), std::abs(totalNormal.y), std::abs(totalNormal.z)};
+
+    int majorAxis = 0;
+    if (absN.y > absN.x && absN.y > absN.z)
+        majorAxis = 2;
+    if (absN.z > absN.x && absN.z > absN.y)
+        majorAxis = 1;
+
+    s_vec2 minBound{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+    s_vec2 maxBound{-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max()};
+
+    for (const s_vec3& v: vertices)
+    {
+        s_vec2 p = project(v, majorAxis);
+        minBound.x = std::min(minBound.x, p.x);
+        minBound.y = std::min(minBound.y, p.y);
+        maxBound.x = std::max(maxBound.x, p.x);
+        maxBound.y = std::max(maxBound.y, p.y);
+    }
+
+    s_vec2 size = {
+        std::max(maxBound.x - minBound.x, 1e-6f),
+        std::max(maxBound.y - minBound.y, 1e-6f)
+    };
+    s_vec2 invSize = {1.f / size.x, 1.f / size.y};
+
+    auto uv = [&](const s_vec3& v) {
+        s_vec2 p = project(v, majorAxis);
+        return sClamp({
+            (p.x - minBound.x) * invSize.x,
+            (p.y - minBound.y) * invSize.y
+        });
+    };
+
+    for (std::size_t i = 0; i < indices.size(); i += 3)
+    {
+        unsigned int i0 = indices[i];
+        unsigned int i1 = indices[i + 1];
+        unsigned int i2 = indices[i + 2];
+
+        out[i0] = uv(vertices[i0]);
+        out[i1] = uv(vertices[i1]);
+        out[i2] = uv(vertices[i2]);
     }
 }

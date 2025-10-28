@@ -148,11 +148,7 @@ int main(int argc, char* argv[])
         GLTexture tex("textures/nyan.bmp");
 
         std::vector<s_vec2> textureCoords;
-        if (!tex.generateTexCoord(info.vertices, info.faces, false, textureCoords))
-        {
-            std::cerr << "failed to generate texture coords" << std::endl;
-            return 1;
-        }
+        tex.generateTexCoordGlobal(info.vertices, info.faces, textureCoords);
 
         std::vector<s_vec3> normals = MathUtils::sComputeVertexNormals(info.vertices, info.faces);
 
@@ -188,8 +184,7 @@ int main(int argc, char* argv[])
             return 1;
 
         std::vector<s_vec2> textCoordFace;
-        if (!tex.generateTexCoord(info.verticesPerFace, info.facesPerFace, true, textCoordFace))
-            return 1;
+        tex.generateTexCoordPerFace(info.verticesPerFace, info.facesPerFace, textCoordFace);
 
         std::vector<s_vec3> normalsFace = MathUtils::sComputeVertexNormals(info.verticesPerFace, info.facesPerFace);
 
