@@ -6,8 +6,9 @@
 Scop::Scop(char* objectFilePath):
 m_context(4, 1),
 m_window(800, 800, "scop"),
-m_shader("shaders/vertex/source.vert", "shaders/vertex/source.frag"),
-m_texture("textures/nyan.bmp")
+m_shader(),
+m_texture(),
+m_buffers()
 {
     m_info = Utils::sParseInput(objectFilePath);
     m_bbox = Utils::sComputeBoundingBoxAndScale(m_info.vertices);
@@ -16,6 +17,12 @@ m_texture("textures/nyan.bmp")
 
     if (!GLContext::sInitGlad())
         throw std::runtime_error("failed to initialize glad");
+
+    if (!m_shader.setup("shaders/vertex/source.vert", "shaders/fragment/source.frag"))
+        throw std::runtime_error("failed to setup shaders");
+
+    if (!m_texture.setup("textures/nyan.bmp"))
+        throw std::runtime_error("failed to setup texture");
     
     std::vector<s_vec2> textureCoords;
     m_texture.generateTexCoordGlobal(m_info.vertices, m_info.faces, textureCoords);
@@ -37,6 +44,19 @@ m_texture("textures/nyan.bmp")
     attributes.emplace_back(0, 3, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, position));
     attributes.emplace_back(1, 2, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, texCoord));
     attributes.emplace_back(2, 3, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, normal));
+
+    if (!m_buffers.vbo.setup())
+        throw std::runtime_error("failed to setup vbo buffer");
+    if (!m_buffers.vao.setup())
+        throw std::runtime_error("failed to setup vao buffer");
+    if (!m_buffers.ebo.setup())
+        throw std::runtime_error("failed to setup ebo buffer");
+    if (!m_buffers.vboFace.setup())
+        throw std::runtime_error("failed to setup vboFace buffer");
+    if (!m_buffers.vaoFace.setup())
+        throw std::runtime_error("failed to setup vaoFace buffer");
+    if (!m_buffers.eboFace.setup())
+        throw std::runtime_error("failed to setup eboFace buffer");
 
     if (!m_buffers.vbo.setData(verticesInterLeaved, GL_STATIC_DRAW))
         throw std::runtime_error("failed to set vbo data");

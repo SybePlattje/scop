@@ -30,9 +30,10 @@ template<class> struct always_false : std::false_type {};
 class GLShader
 {
     public:
-        GLShader(const std::string& vertexFilePath, const std::string& fragmentFilePath);
+        GLShader();
         ~GLShader();
 
+        bool setup(const std::string& vertexFilePath, const std::string& fragmentFilePath);
         void bind() const;
         void unbind() const;
         GLuint getProgramId() const;

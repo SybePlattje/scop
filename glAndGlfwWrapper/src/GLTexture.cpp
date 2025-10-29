@@ -46,19 +46,9 @@ static s_vec2 sClamp(const s_vec2& value, float minVal = 0.f, float maxVal = 1.f
 }
 
 /**
- * @param path the path to the texture
- * @brief initializes the texture object
- * @exception runtime error if loading of texture fails
+ * @brief initializes all object variables
  */
-GLTexture::GLTexture(const std::string& path):
-m_textureId(0),
-m_width(0),
-m_height(0),
-m_channels(0)
-{
-    if (!loadFromFile(path))
-        throw std::runtime_error("failed to load texture");
-}
+GLTexture::GLTexture(): m_textureId(0), m_width(0), m_height(0), m_channels(0) {}
 
 /**
  * @param other the old texture object
@@ -109,6 +99,21 @@ GLTexture::~GLTexture()
 }
 
 /**
+ * @param path the path to the texture
+ * @brief initializes the texture
+ * @return true if texture setup is successfull, false on failed
+ */
+bool GLTexture::setup(const std::string& path)
+{
+    if (!loadFromFile(path))
+    {
+        std::cerr << "failed to load texture" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+/**
  * @brief gives the id of the texture
  * @return the texture id
  */
@@ -128,7 +133,10 @@ bool GLTexture::loadFromFile(const std::string& path)
 
     std::vector<unsigned char> buffer;
     if(!GLUtils::sReadTexture(path.c_str(), buffer))
+    {
+        std::cerr << "failed to read texture file" << std::endl;
         return false;
+    }
 
     buffer.emplace_back('\0');
     stbi_set_flip_vertically_on_load(true);

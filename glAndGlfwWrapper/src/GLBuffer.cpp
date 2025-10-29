@@ -4,18 +4,9 @@
 
 /**
  * @param type the type of buffer
- * @brief create a gl buffer
- * @exception if glGenBuffer fails runtime error is thrown
+ * @brief sets the type of buffer and the rest to default values
  */
-GLBuffer::GLBuffer(e_Type type):
-m_id(0),
-m_type(type),
-m_count(0)
-{
-    glGenBuffers(1, &m_id);
-    if (0 == m_id)
-        throw std::runtime_error(std::string("failed to make buffer of type: " + sToGLenum(type)));
-}
+GLBuffer::GLBuffer(e_Type type): m_id(0), m_type(type), m_count(0) {}
 
 /**
  * @param other the buffer object with data to be moved
@@ -59,6 +50,18 @@ GLBuffer& GLBuffer::operator=(GLBuffer&& other)
         other.m_count = 0;
     }
     return *this;
+}
+
+/**
+ * @brief generates the buffer
+ * @return true if buffer generation is successfull, false if buffer generation fails
+ */
+bool GLBuffer::setup()
+{
+    glGenBuffers(1, &m_id);
+    if (0 == m_id)
+        return false;
+    return true;
 }
 
 /**

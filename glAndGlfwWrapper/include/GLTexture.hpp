@@ -9,12 +9,13 @@
 class GLTexture
 {
     public:
-        GLTexture(const std::string& path);
+        GLTexture();
         GLTexture(GLTexture&& other);
         ~GLTexture();
 
         GLTexture& operator=(GLTexture&& other);
 
+        bool setup(const std::string& path);
         bool loadFromFile(const std::string& path);
         void bind(unsigned int slot = 0) const;
         void unbind() const;

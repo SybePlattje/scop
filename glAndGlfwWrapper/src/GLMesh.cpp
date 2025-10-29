@@ -3,18 +3,9 @@
 #include <stdexcept>
 
 /**
- * @brief creates a mesh object with default values
- * @exception runtime error if the creation of the vertex array fails
+ * @brief initializes all object variables with the default values
  */
-GLMesh::GLMesh():
-m_vertexArrayObject(0),
-m_vertexCount(0),
-m_indexCount(0)
-{
-    glGenVertexArrays(1, &m_vertexArrayObject);
-    if (m_vertexArrayObject == 0)
-        throw std::runtime_error("failed to create vertex array object");
-}
+GLMesh::GLMesh(): m_vertexArrayObject(0), m_vertexCount(0), m_indexCount(0) {}
 
 /**
  * @param other the object of which the data to move and take ownership of
@@ -58,6 +49,18 @@ GLMesh& GLMesh::operator=(GLMesh&& other)
     }
 
     return *this;
+}
+
+/**
+ * @brief setsup the generation of the vertex array object
+ * @return true if vertex array object generation succeeds, false if generation fails
+ */
+bool GLMesh::setup()
+{
+    glGenVertexArrays(1, &m_vertexArrayObject);
+    if (0 == m_vertexArrayObject)
+        return false;
+    return true;
 }
 
 /**

@@ -4,36 +4,61 @@
 #include "GLUtils.hpp"
 
 /**
+ * @brief sets object variables to default
+ */
+GLShader::GLShader(): m_program(0) {}
+
+/**
+ * @brief cleans the shader program when done using
+ */
+GLShader::~GLShader()
+{
+    if (m_program)
+        glDeleteProgram(m_program);
+}
+
+/**
  * @param vertexFilePath the file path to the vertex shader
  * @param fragmentFilePath the file path to the fragment shader
- * @brief compiles the vertex and fragment shader to be used later
- * @exception runtime error if reading of shader files fails
- * @exception runtime error if the compiling of the shaders fails
- * @exception runtime error if the linking between shader and shaderprogram fails
+ * @brief creats and links the saders to the shader program which is setup
+ * @return true if the shader compailing and linking succeeds, flase if it fails and a error message is printed
  */
-GLShader::GLShader(const std::string& vertexFilePath, const std::string& fragmentFilePath)
+bool GLShader::setup(const std::string& vertexFilePath, const std::string& fragmentFilePath)
 {
     std::vector<unsigned char> fileSource;
 
     if (!GLUtils::sReadShaderFile(vertexFilePath.c_str(), fileSource))
-        throw std::runtime_error("Failed to read vertex shader file");
+    {
+        std::cerr << "Failed to read vertex shader file" << std::endl;
+        return false;
+    }
+    fileSource.emplace_back('\0');
 
     std::string vertexSource = reinterpret_cast<char*>(fileSource.data());
     GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
     if (vertexShader == 0)
-        throw std::runtime_error("Failed to compile vertexShader");
+    {
+        std::cerr << "Failed to compile vertexShader" << std::endl;
+        return false;
+    }
     
     fileSource.clear();
 
     if (!GLUtils::sReadShaderFile(fragmentFilePath.c_str(), fileSource))
-        throw std::runtime_error("Failed to read fragment shader file");
+    {
+        glDeleteShader(vertexShader);
+        std::cerr << "Failed to read fragment shader file" << std::endl;
+        return false;
+    }
+    fileSource.emplace_back('\0');
 
     std::string fragmentSource = reinterpret_cast<char*>(fileSource.data());
     GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
     if (fragmentShader == 0)
     {
         glDeleteShader(vertexShader);
-        throw std::runtime_error("Failed to compile fragmentShader");
+        std::cerr << "Failed to compile fragmentShader" << std::endl;
+        return false;
     }
 
     m_program = glCreateProgram();
@@ -41,7 +66,8 @@ GLShader::GLShader(const std::string& vertexFilePath, const std::string& fragmen
     {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
-        throw std::runtime_error("Failed to create shader program");
+        std::cerr << "Failed to create shader program" << std::endl;
+        return false;
     }
 
     attachShader(vertexShader);
@@ -53,19 +79,12 @@ GLShader::GLShader(const std::string& vertexFilePath, const std::string& fragmen
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
         glDeleteProgram(m_program);
-        throw std::runtime_error("Failed to link shaders to program");
+        std::cerr << "Failed to link shaders to program" << std::endl;
+        return false;
     }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-}
-
-/**
- * @brief cleans the shader program when done using
- */
-GLShader::~GLShader()
-{
-    if (m_program)
-        glDeleteProgram(m_program);
+    return true;
 }
 
 /**
@@ -218,7 +237,7 @@ bool GLShader::checkCompileErrors(GLuint object, GLenum type, bool isProgram)
         if (!success)
         {
             glGetProgramInfoLog(object, 512, nullptr, buffer);
-            std::cerr << "❌ PROGRMA_LINKING_ERROR\n" << buffer << std::endl;
+            std::cerr << "❌ PROGRAM_LINKING_ERROR\n" << buffer << std::endl;
             return false;
         }
         return true;

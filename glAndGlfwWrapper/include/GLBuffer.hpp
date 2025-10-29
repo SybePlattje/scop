@@ -24,6 +24,8 @@ class GLBuffer
         GLBuffer& operator=(const GLBuffer& other) = delete;
         GLBuffer& operator=(GLBuffer&& other);
 
+        bool setup();
+
         void bind() const;
         void unbind() const;
 
