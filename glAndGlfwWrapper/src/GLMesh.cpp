@@ -70,7 +70,7 @@ bool GLMesh::setup()
  * @returns true when the attributes are attached, false on error with error message
  * @attention attributes.offset and attributes.stride are assumed to hold there byte value
  */
-bool GLMesh::attachVertexBuffer(const GLBuffer& buffer, std::vector<s_VertexAttribute>& attributes)
+bool GLMesh::attachVertexBuffer(const GLBuffer& buffer, const std::vector<s_VertexAttribute>& attributes)
 {
     if (buffer.getType() != GLBuffer::e_Type::Array)
     {

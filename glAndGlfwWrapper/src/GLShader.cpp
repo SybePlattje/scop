@@ -21,7 +21,7 @@ GLShader::~GLShader()
  * @param vertexFilePath the file path to the vertex shader
  * @param fragmentFilePath the file path to the fragment shader
  * @brief creats and links the saders to the shader program which is setup
- * @return true if the shader compailing and linking succeeds, flase if it fails and a error message is printed
+ * @return true if the shader compailing and linking succeeds, false if it fails and a error message is printed
  */
 bool GLShader::setup(const std::string& vertexFilePath, const std::string& fragmentFilePath)
 {

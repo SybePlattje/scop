@@ -84,6 +84,14 @@ void GLContext::sPollEvents()
 }
 
 /**
+ * @brief waits until events are queued and processes them, this puts the calling thread to sleep until at least one or more events are available
+ */
+void GLContext::sWaitEvents()
+{
+    glfwWaitEvents();
+}
+
+/**
  * @brief gets the current time in seconds
  * @return the time in seconds or 0 if an error has occurred
  */

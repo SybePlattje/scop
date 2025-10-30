@@ -23,80 +23,21 @@ m_buffers()
 
     if (!m_texture.setup("textures/nyan.bmp"))
         throw std::runtime_error("failed to setup texture");
-    
-    std::vector<s_vec2> textureCoords;
-    m_texture.generateTexCoordGlobal(m_info.vertices, m_info.faces, textureCoords);
 
-    std::vector<s_vec3> normals = Utils::sComputeVertexNormals(m_info.vertices, m_info.faces);
-    
-    std::vector <s_Vertex> verticesInterLeaved;
-    verticesInterLeaved.reserve(m_info.vertices.size());
-    for (std::size_t i = 0; i < m_info.vertices.size(); ++i)
-    {
-        verticesInterLeaved.emplace_back(
-            m_info.vertices[i],
-            textureCoords[i],
-            normals[i]
-        );
-    }
+    std::vector<s_Vertex>verticesInterLeaved = setupShaderBufferData();
 
     std::vector<s_VertexAttribute> attributes;
     attributes.emplace_back(0, 3, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, position));
     attributes.emplace_back(1, 2, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, texCoord));
     attributes.emplace_back(2, 3, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, normal));
 
-    if (!m_buffers.vbo.setup())
-        throw std::runtime_error("failed to setup vbo buffer");
-    if (!m_buffers.vao.setup())
-        throw std::runtime_error("failed to setup vao buffer");
-    if (!m_buffers.ebo.setup())
-        throw std::runtime_error("failed to setup ebo buffer");
-    if (!m_buffers.vboFace.setup())
-        throw std::runtime_error("failed to setup vboFace buffer");
-    if (!m_buffers.vaoFace.setup())
-        throw std::runtime_error("failed to setup vaoFace buffer");
-    if (!m_buffers.eboFace.setup())
-        throw std::runtime_error("failed to setup eboFace buffer");
+    if (!setupBuffersGlobal(verticesInterLeaved, attributes))
+        throw std::runtime_error("failed to setup buffers with global shaders");
 
-    if (!m_buffers.vbo.setData(verticesInterLeaved, GL_STATIC_DRAW))
-        throw std::runtime_error("failed to set vbo data");
+    std::vector<s_Vertex> verticesInterLeavedFace = setupShaderBufferDataPerFace();
 
-    if (!m_buffers.vao.attachVertexBuffer(m_buffers.vbo, attributes))
-        throw std::runtime_error("failed to attach vbo to vao");
-
-    if (!m_buffers.ebo.setData(m_info.faces, GL_STATIC_DRAW))
-        throw std::runtime_error("failed to set ebo data");
-
-    if (!m_buffers.vao.attachElementBuffer(m_buffers.ebo))
-        throw std::runtime_error("failed to attach ebo to vbo");
-
-    std::vector<s_vec2> textCoordFace;
-    m_texture.generateTexCoordPerFace(m_info.verticesPerFace, m_info.facesPerFace, textCoordFace);
-
-    std::vector<s_vec3> normalsFace = Utils::sComputeVertexNormals(m_info.verticesPerFace, m_info.facesPerFace);
-    
-    std::vector<s_Vertex> verticesInterLeavedFace;
-    verticesInterLeavedFace.reserve(m_info.verticesPerFace.size());
-    for (std::size_t i = 0; i < m_info.verticesPerFace.size(); ++i)
-    {
-        verticesInterLeavedFace.emplace_back(
-            m_info.verticesPerFace[i],
-            textCoordFace[i],
-            normalsFace[i]
-        );
-    }
-
-    if (!m_buffers.vboFace.setData(verticesInterLeavedFace, GL_STATIC_DRAW))
-        throw std::runtime_error("failed to set vboFace data");
-    
-    if (!m_buffers.vaoFace.attachVertexBuffer(m_buffers.vboFace, attributes))
-        throw std::runtime_error("failed to attach vboFace to vaoFace");
-
-    if (!m_buffers.eboFace.setData(m_info.facesPerFace, GL_STATIC_DRAW))
-        throw std::runtime_error("failed to set eboFace data");
-
-    if (!m_buffers.vaoFace.attachElementBuffer(m_buffers.eboFace))
-        throw std::runtime_error("failed to attack eboFace to vboFace");
+    if (!setupBuffersPerFace(verticesInterLeavedFace, attributes))
+        throw std::runtime_error("failed to setup buffers with per face shader");
 
     m_displayInfo.transform.orientation = Utils::sQuatIdentify();
 
@@ -109,7 +50,7 @@ void Scop::start()
 {
     float fovRadians = Utils::sRadiance();
     float boundingRadius = Utils::sBoundingBoxRadius(m_bbox);
-    float distance = Utils::sDistance(boundingRadius, fovRadians) * 1.5f;
+    float distance = Utils::sDistance(boundingRadius, fovRadians) * 0.5f;
 
     s_vec3 up = {0.f, 1.f, 0.f};
     float near = 0.01f;
@@ -119,7 +60,6 @@ void Scop::start()
     while (!m_window.shoulClose())
     {
         m_timer.update();
-        GLContext::sPollEvents();
         m_window.clear();
         m_window.enable(false, true);
         m_shader.bind();
@@ -149,7 +89,132 @@ void Scop::start()
             std::cerr << "GL error: " << err << std::endl;
         
         m_window.swapBuffers();
+        GLContext::sWaitEvents();
     }
+}
+
+std::vector<s_Vertex> Scop::setupShaderBufferData()
+{
+    std::vector<s_vec2> textureCoords;
+    m_texture.generateTexCoordGlobal(m_info.vertices, m_info.faces, textureCoords);
+
+    std::vector<s_vec3> normals = Utils::sComputeVertexNormals(m_info.vertices, m_info.faces);
+    
+    std::vector <s_Vertex> verticesInterLeaved;
+    verticesInterLeaved.reserve(m_info.vertices.size());
+    for (std::size_t i = 0; i < m_info.vertices.size(); ++i)
+    {
+        verticesInterLeaved.emplace_back(
+            m_info.vertices[i],
+            textureCoords[i],
+            normals[i]
+        );
+    }
+
+    return verticesInterLeaved;
+}
+
+std::vector<s_Vertex> Scop::setupShaderBufferDataPerFace()
+{
+    std::vector<s_vec2> textCoordFace;
+    m_texture.generateTexCoordPerFace(m_info.verticesPerFace, m_info.facesPerFace, textCoordFace);
+
+    std::vector<s_vec3> normalsFace = Utils::sComputeVertexNormals(m_info.verticesPerFace, m_info.facesPerFace);
+    
+    std::vector<s_Vertex> verticesInterLeavedFace;
+    verticesInterLeavedFace.reserve(m_info.verticesPerFace.size());
+    for (std::size_t i = 0; i < m_info.verticesPerFace.size(); ++i)
+    {
+        verticesInterLeavedFace.emplace_back(
+            m_info.verticesPerFace[i],
+            textCoordFace[i],
+            normalsFace[i]
+        );
+    }
+
+    return verticesInterLeavedFace;
+}
+
+bool Scop::setupBuffersGlobal(const std::vector<s_Vertex>& vertices, const std::vector<s_VertexAttribute>& attributes)
+{
+    if (!m_buffers.vbo.setup())
+    {
+        std::cerr << "failed to setup vbo buffer" << std::endl;
+        return false;
+    }
+    if (!m_buffers.vao.setup())
+    {
+        std::cerr << "failed to setup vao buffer" << std::endl;
+        return false;
+    }
+    if (!m_buffers.ebo.setup())
+    {
+        std::cerr << "failed to setup ebo buffer" << std::endl;
+        return false;
+    }
+
+    if (!m_buffers.vbo.setData(vertices, GL_STATIC_DRAW))
+    {
+        std::cerr << "failed to set vbo data" << std::endl;
+        return false;
+    }
+
+    if (!m_buffers.vao.attachVertexBuffer(m_buffers.vbo, attributes))
+    {
+        std::cerr << "failed to attach vbo to vao" << std::endl;
+        return false;
+    }
+
+    if (!m_buffers.ebo.setData(m_info.faces, GL_STATIC_DRAW))
+    {
+        std::cerr << "failed to set ebo data" << std::endl;
+        return false;
+    }
+
+    if (!m_buffers.vao.attachElementBuffer(m_buffers.ebo))
+    {
+        std::cerr << "failed to attach ebo to vbo" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool Scop::setupBuffersPerFace(const std::vector<s_Vertex>& vertices, const std::vector<s_VertexAttribute>& attributes)
+{
+    if (!m_buffers.vboFace.setup())
+    {
+        throw std::runtime_error("failed to setup vboFace buffer");
+    }
+    if (!m_buffers.vaoFace.setup())
+    {
+        throw std::runtime_error("failed to setup vaoFace buffer");
+    }
+    if (!m_buffers.eboFace.setup())
+    {
+        throw std::runtime_error("failed to setup eboFace buffer");
+    }
+
+    if (!m_buffers.vboFace.setData(vertices, GL_STATIC_DRAW))
+    {
+        throw std::runtime_error("failed to set vboFace data");
+    }
+    
+    if (!m_buffers.vaoFace.attachVertexBuffer(m_buffers.vboFace, attributes))
+    {
+        throw std::runtime_error("failed to attach vboFace to vaoFace");
+    }
+
+    if (!m_buffers.eboFace.setData(m_info.facesPerFace, GL_STATIC_DRAW))
+    {
+        throw std::runtime_error("failed to set eboFace data");
+    }
+
+    if (!m_buffers.vaoFace.attachElementBuffer(m_buffers.eboFace))
+    {
+        throw std::runtime_error("failed to attack eboFace to vboFace");
+    }
+
+    return true;
 }
 
 s_mat4 Scop::setupModelViewProjection(float fovRadian, float near, float far, float distance, const s_vec3& up)

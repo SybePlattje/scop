@@ -27,7 +27,7 @@ class GLMesh
         GLMesh& operator=(GLMesh&& other);
 
         bool setup();
-        bool attachVertexBuffer(const GLBuffer& buffer, std::vector<s_VertexAttribute>& attributes);
+        bool attachVertexBuffer(const GLBuffer& buffer, const std::vector<s_VertexAttribute>& attributes);
         bool attachElementBuffer(const GLBuffer& buffer);
         void draw(GLenum mode = GL_TRIANGLES, GLsizei count = 0, GLenum indexType = GL_UNSIGNED_INT) const;
         void bind() const;

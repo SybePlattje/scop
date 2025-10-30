@@ -11,6 +11,7 @@ class GLContext
 
         static bool sInitGlad();
         static void sPollEvents();
+        static void sWaitEvents();
         static double sGetTime();
         static GLFWerrorfun sSetErrorCallback(GLFWerrorfun callback);
         static void sTerminate();

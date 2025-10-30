@@ -15,7 +15,9 @@
  */
 static s_vec2 sMinVec2(const s_vec2& a, const s_vec2& b)
 {
-    return {std::min(a.x, b.x), std::min(a.y, b.y)};
+    if (b.x > a.x && b.y > a.y)
+        return a;
+    return b;
 }
 
 /**
@@ -26,7 +28,9 @@ static s_vec2 sMinVec2(const s_vec2& a, const s_vec2& b)
  */
 static s_vec2 sMaxVec2(const s_vec2& a, const s_vec2& b)
 {
-    return {std::max(a.x, b.x), std::max(a.y, b.y)};
+    if (b.x < a.x && b.y < a.y)
+        return a;
+    return b;
 }
 
 /**

@@ -25,6 +25,10 @@ class Scop
         s_BoundingBox m_bbox;
         s_DisplayInfo m_displayInfo;
 
+        std::vector<s_Vertex> setupShaderBufferData();
+        std::vector<s_Vertex> setupShaderBufferDataPerFace();
+        bool setupBuffersGlobal(const std::vector<s_Vertex>& vertices, const std::vector<s_VertexAttribute>& attributes);
+        bool setupBuffersPerFace(const std::vector<s_Vertex>& veritces, const std::vector<s_VertexAttribute>& attributes);
         s_mat4 setupModelViewProjection(float fovRadian, float near, float far, float distance, const s_vec3& up);
         static void smKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
