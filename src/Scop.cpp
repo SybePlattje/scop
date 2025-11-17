@@ -89,7 +89,7 @@ void Scop::start()
             std::cerr << "GL error: " << err << std::endl;
         
         m_window.swapBuffers();
-        GLContext::sWaitEvents();
+        GLContext::sPollEvents();
     }
 }
 
@@ -117,7 +117,7 @@ std::vector<s_Vertex> Scop::setupShaderBufferData()
 std::vector<s_Vertex> Scop::setupShaderBufferDataPerFace()
 {
     std::vector<s_vec2> textCoordFace;
-    m_texture.generateTexCoordPerFace(m_info.verticesPerFace, m_info.facesPerFace, textCoordFace);
+    m_texture.generateTexCoordPerFace(m_info.facesPerFace, textCoordFace);
 
     std::vector<s_vec3> normalsFace = Utils::sComputeVertexNormals(m_info.verticesPerFace, m_info.facesPerFace);
     
