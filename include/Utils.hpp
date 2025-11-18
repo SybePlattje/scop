@@ -32,6 +32,5 @@ class Utils
 		static s_mat4 sMat4Identify();
 		static s_InputFileLines sParseInput(const char* path);
 };
-s_vec3 operator*(const s_vec3& v, float x);
-s_vec3 operator+(const s_vec3& a,const s_vec3& b);
+
 #endif

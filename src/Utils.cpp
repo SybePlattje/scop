@@ -98,7 +98,7 @@ s_BoundingBox Utils::sComputeBoundingBoxAndScale(const std::vector<s_vec3>& vert
         (min.z + max.z) * 0.5f
     };
 
-    s_vec3 size = sVec3Subtract(max, min);
+    s_vec3 size = {max.x - min.x, max.y - min.y, max.z - min.z};
     float maxDim = std::max({size.x, size.y, size.z});
 
     float desiredSize = 1.f;
@@ -117,12 +117,12 @@ float Utils::sBoundingBoxRadius(const s_BoundingBox& bbox)
 
 s_quat Utils::sQuatMultiply(const s_quat& a, const s_quat& b)
 {
-    s_vec3 v1(a.x, a.y, a.z);
-    s_vec3 v2(b.x, b.y, b.z);
-
-    float w = a.w * b.w - sVec3Dot(v1, v2);
-    s_vec3 v = v2 * a.w + v1 * b.w + sVec3Cross(v1, v2);
-    return {w, v.x, v.y, v.z};
+    return {
+        a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+        a.w * b.x + a.x * b.w + a.y * b.z + a.z * b.y,
+        a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+        a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w
+    };
 }
 
 s_quat Utils::sQuatFromAxisAngle(const s_vec3& axis, float angleRad)
@@ -365,14 +365,4 @@ s_InputFileLines Utils::sParseInput(const char* path)
         throw std::runtime_error("no vertices or faces found in file");
 
     return result;
-}
-
-s_vec3 operator*(const s_vec3& v, float x)
-{
-    return {v.x + x, v.y + x, v.z + x};
-}
-
-s_vec3 operator+(const s_vec3& a, const s_vec3& b)
-{
-    return {a.x + b.x, a.y + b.y, a.z + b.z};
 }
