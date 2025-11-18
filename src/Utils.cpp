@@ -34,27 +34,15 @@ std::vector<s_vec3> Utils::sComputeVertexNormals
         s_vec3 v2 = vertices[i2];
 
         // Calulate the normal of the face
-        s_vec3 edge1 = {v1.x - v0.x, v1.y - v0.y, v1.z - v0.z};
-        s_vec3 edge2 = {v2.x - v0.x, v2.y - v0.y, v2.z - v0.z};
+        s_vec3 edge1 = sVec3Subtract(v1, v0);
+        s_vec3 edge2 = sVec3Subtract(v2, v0);
 
-        s_vec3 faceNormal = sVec3Normalize({
-            edge1.y * edge2.z - edge1.z * edge2.y,
-            edge1.z * edge2.x - edge1.x * edge2.z,
-            edge1.x * edge2.y - edge1.y * edge2.x
-        });
+        s_vec3 faceNormal = sVec3Normalize(sVec3Cross(edge1, edge2));
 
-        // Accumulate the face normal into each vertex mormal
-        normal[i0].x += faceNormal.x;
-        normal[i0].y += faceNormal.y;
-        normal[i0].z += faceNormal.z;
-
-        normal[i1].x += faceNormal.x;
-        normal[i1].y += faceNormal.y;
-        normal[i1].z += faceNormal.z;
-
-        normal[i2].x += faceNormal.x;
-        normal[i2].y += faceNormal.y;
-        normal[i2].z += faceNormal.z;
+        // Accumulate the face normal into each vertex normal
+        normal[i0] = sVec3Add(normal[i0], faceNormal);
+        normal[i1] = sVec3Add(normal[i1], faceNormal);
+        normal[i2] = sVec3Add(normal[i2], faceNormal);
     }
 
     // Normalize each normal
@@ -110,7 +98,7 @@ s_BoundingBox Utils::sComputeBoundingBoxAndScale(const std::vector<s_vec3>& vert
         (min.z + max.z) * 0.5f
     };
 
-    s_vec3 size = {max.x - min.x, max.y - min.y, max.z - min.z};
+    s_vec3 size = sVec3Subtract(max, min);
     float maxDim = std::max({size.x, size.y, size.z});
 
     float desiredSize = 1.f;
@@ -129,12 +117,12 @@ float Utils::sBoundingBoxRadius(const s_BoundingBox& bbox)
 
 s_quat Utils::sQuatMultiply(const s_quat& a, const s_quat& b)
 {
-    return {
-        a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
-        a.w * b.x + a.x * b.w + a.y * b.z + a.z * b.y,
-        a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
-        a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w
-    };
+    s_vec3 v1(a.x, a.y, a.z);
+    s_vec3 v2(b.x, b.y, b.z);
+
+    float w = a.w * b.w - sVec3Dot(v1, v2);
+    s_vec3 v = v2 * a.w + v1 * b.w + sVec3Cross(v1, v2);
+    return {w, v.x, v.y, v.z};
 }
 
 s_quat Utils::sQuatFromAxisAngle(const s_vec3& axis, float angleRad)
@@ -251,19 +239,19 @@ s_mat4 Utils::sQuatToMat4(const s_quat& q)
 {
     s_mat4 mat = sMat4Identify();
 
-    mat.m[0][0] = 1.f - 2.f * q.y * q.y - 2.f * q.z * q.z;
-    mat.m[0][1] = 2.f * q.x * q.y - 2.f * q.w * q.z;
-    mat.m[0][2] = 2.f * q.x * q.z + 2.f * q.w * q.y;
+    mat.m[0][0] = 1.f - 2.f * q.y * q.y - 2.f * q.z * q.z; // 1 - 2*y^2 - 2*z^2
+    mat.m[0][1] = 2.f * q.x * q.y - 2.f * q.w * q.z; // 2*x*y - 2*w*z
+    mat.m[0][2] = 2.f * q.x * q.z + 2.f * q.w * q.y; // 2*x*z + 2*w*y
     mat.m[0][3] = 0.f;
 
-    mat.m[1][0] = 2.f * q.x * q.y + 2.f * q.w *q.z;
-    mat.m[1][1] = 1.f - 2.f * q.x * q.x - 2.f * q.z * q.z;
-    mat.m[1][2] = 2.f * q.y * q.z - 2.f * q.w * q.x;
+    mat.m[1][0] = 2.f * q.x * q.y + 2.f * q.w *q.z; // 2*x*y + 2*w*z
+    mat.m[1][1] = 1.f - 2.f * q.x * q.x - 2.f * q.z * q.z; // 1 - 2*2^2 - 2*z^2
+    mat.m[1][2] = 2.f * q.y * q.z - 2.f * q.w * q.x; // 2*y*z - 2*w*x
     mat.m[1][3] = 0.f;
 
-    mat.m[2][0] = 2.f * q.x * q.z - 2.f * q.w * q.y;
-    mat.m[2][1] = 2.f * q.y * q.z + 2.f * q.w * q.x;
-    mat.m[2][2] = 1.f - 2.f * q.x * q.x - 2.f * q.y * q.y;
+    mat.m[2][0] = 2.f * q.x * q.z - 2.f * q.w * q.y; // 2*x*z - 2*w*y
+    mat.m[2][1] = 2.f * q.y * q.z + 2.f * q.w * q.x; // 2*y*z + 2*w*x
+    mat.m[2][2] = 1.f - 2.f * q.x * q.x - 2.f * q.y * q.y; // 1 - 2*x^2 - 2*y^2
     mat.m[2][3] = 0.f;
 
     mat.m[3][0] = 0.f;
@@ -288,6 +276,11 @@ s_vec3 Utils::sVec3Subtract(const s_vec3& a, const s_vec3& b)
     return {a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
+s_vec3 Utils::sVec3Add(const s_vec3& a, const s_vec3& b)
+{
+    return {a.x + b.x, a.y + b.y, a.z + b.z};
+}
+
 s_vec3 Utils::sVec3Cross(const s_vec3& a, const s_vec3& b)
 {
     return {
@@ -307,7 +300,7 @@ s_InputFileLines Utils::sParseInput(const char* path)
     if (!path)
         throw std::runtime_error("path cannot be empty");
 
-    std::filesystem::path filePath = path;
+    std::filesystem::path filePath(path);
     if (".obj" != filePath.extension())
         throw std::runtime_error("file needs to be a .obj");
 
@@ -372,4 +365,14 @@ s_InputFileLines Utils::sParseInput(const char* path)
         throw std::runtime_error("no vertices or faces found in file");
 
     return result;
+}
+
+s_vec3 operator*(const s_vec3& v, float x)
+{
+    return {v.x + x, v.y + x, v.z + x};
+}
+
+s_vec3 operator+(const s_vec3& a, const s_vec3& b)
+{
+    return {a.x + b.x, a.y + b.y, a.z + b.z};
 }

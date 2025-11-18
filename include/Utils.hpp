@@ -12,6 +12,7 @@ class Utils
 		static s_BoundingBox sComputeBoundingBoxAndScale(const std::vector<s_vec3>& vertices);
 		static s_vec3 sVec3Normalize(const s_vec3& v);
 		static s_vec3 sVec3Subtract(const s_vec3& a, const s_vec3& b);
+        static s_vec3 sVec3Add(const s_vec3& a, const s_vec3& b);
 		static s_vec3 sVec3Cross(const s_vec3& a, const s_vec3& b);
 		static float sVec3Dot(const s_vec3& a, const s_vec3& b);
 		static s_quat sQuatIdentify();
@@ -31,5 +32,6 @@ class Utils
 		static s_mat4 sMat4Identify();
 		static s_InputFileLines sParseInput(const char* path);
 };
-
+s_vec3 operator*(const s_vec3& v, float x);
+s_vec3 operator+(const s_vec3& a,const s_vec3& b);
 #endif
