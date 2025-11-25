@@ -3,6 +3,18 @@ This project is a small graphical application designed to help me begin learning
 It uses GLAD and GLFW to load andrender `.obj` 3D bodel files, and it allows rotation of the loaded object using the keyboard input.  
 All transformation mathematics (rotation matrices) are inplemented manually as was a constraint for this project.
 
+![42 in grayscale color](/images/42Color.png)
+
+![42 with a nyan cat texture](/images/42Texture.png)
+
+![teapot in grayscale color](/images/teapotColor.png)
+
+![teapot with a nyan cat texture](/images/teapotTexture.png)
+
+![teapot with a nyan cat texture zoomed out](/images/teapotTextureZoomedOut.png)
+
+![teapot with a nyan cat texture aplied per triangle face](/images/teapotTexturePerFace.png)
+
 # Features
 * Loads and parse `.obj` 3D model files
 * Displays 3D geometry using OpenGL
