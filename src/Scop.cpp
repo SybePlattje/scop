@@ -27,9 +27,13 @@ m_buffers()
     std::vector<s_Vertex>verticesInterLeaved = setupShaderBufferData();
 
     std::vector<s_VertexAttribute> attributes;
-    attributes.emplace_back(0, 3, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, position));
-    attributes.emplace_back(1, 2, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, texCoord));
-    attributes.emplace_back(2, 3, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, normal));
+    s_VertexAttribute vertA{0, 3, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, position)};
+    s_VertexAttribute vertB{1, 2, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, texCoord)};
+    s_VertexAttribute vertC{2, 3, GL_FLOAT, GL_FALSE, sizeof(s_Vertex), offsetof(s_Vertex, normal)};
+
+    attributes.push_back(vertA);
+    attributes.push_back(vertB);
+    attributes.push_back(vertC);
 
     if (!setupBuffersGlobal(verticesInterLeaved, attributes))
         throw std::runtime_error("failed to setup buffers with global shaders");
@@ -104,11 +108,11 @@ std::vector<s_Vertex> Scop::setupShaderBufferData()
     verticesInterLeaved.reserve(m_info.vertices.size());
     for (std::size_t i = 0; i < m_info.vertices.size(); ++i)
     {
-        verticesInterLeaved.emplace_back(
-            m_info.vertices[i],
-            textureCoords[i],
-            normals[i]
-        );
+        s_Vertex vertex;
+        vertex.position = m_info.vertices[i];
+        vertex.texCoord = textureCoords[i];
+        vertex.normal = normals[i];
+        verticesInterLeaved.push_back(vertex);
     }
 
     return verticesInterLeaved;
@@ -125,11 +129,11 @@ std::vector<s_Vertex> Scop::setupShaderBufferDataPerFace()
     verticesInterLeavedFace.reserve(m_info.verticesPerFace.size());
     for (std::size_t i = 0; i < m_info.verticesPerFace.size(); ++i)
     {
-        verticesInterLeavedFace.emplace_back(
-            m_info.verticesPerFace[i],
-            textCoordFace[i],
-            normalsFace[i]
-        );
+        s_Vertex vertex;
+        vertex.position = m_info.verticesPerFace[i];
+        vertex.texCoord = textCoordFace[i];
+        vertex.normal = normalsFace[i];
+        verticesInterLeavedFace.push_back(vertex);
     }
 
     return verticesInterLeavedFace;

@@ -1,6 +1,8 @@
 NAME = scop
 
 CXX = c++
+CC = cc
+CFLAGS = -Wall -Wextra -Werror -MMD -MP
 CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -MMD -MP
 LFLAGS = -lGL -lglfw -ldl
 
@@ -43,7 +45,7 @@ $(OBJ_DIR)/%.o: %.cpp
 
 $(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 -include $(DEPS)
 

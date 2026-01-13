@@ -326,7 +326,11 @@ s_InputFileLines Utils::sParseInput(const char* path)
         {
             float x, y, z;
             std::sscanf(line.c_str(), "v %f %f %f", &x, &y, &z);
-            result.vertices.emplace_back(x, y, z);
+            s_vec3 vec;
+            vec.x = x;
+            vec.y = y;
+            vec.z = z;
+            result.vertices.push_back(vec);
         }
         else if (0 == line.rfind("f ", 0))
         {
